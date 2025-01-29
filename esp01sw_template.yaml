@@ -88,7 +88,6 @@ interval:
         then:
         - script.execute: turn_on_script
 
-
-# dashboard_import:
-#   package_import_url: github://esphome/esphome-project-template/project-template-esp32.yaml@v6
-#   import_full_config: true # or true
+dashboard_import:
+  package_import_url: github://marekgryniewiecki/esphome-templates/blob/main/esp01sw_template.yaml@main
+  import_full_config: true # or true
