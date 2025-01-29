@@ -1,0 +1,94 @@
+substitutions:
+  device_name: esp01sw
+  device_friendly_name: "ESP01 switch"
+  switch_name: "Switch"
+
+esphome:
+  name: ${device_name}
+  #build_path: ./build/${node_name}
+  friendly_name: ${device_friendly_name}
+  name_add_mac_suffix: true
+
+  project:
+    name: "marekgryniewiecki.esp01sw"
+    version: "1.0.0"
+
+esp8266:
+  board: esp01_1m
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  reboot_timeout: 5min
+  fast_connect: true
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  #ap:
+  #  ssid: "Test2 Fallback Hotspot"
+  #  password: "12345678"
+
+  #override
+  power_save_mode: HIGH
+
+# Enable logging
+logger:
+  baud_rate: 0
+
+# Enable Home Assistant API
+api:
+#  reboot_timeout: 0s
+
+#web_server:
+#  port: 80
+
+ota:
+  - platform: esphome
+
+uart:
+  baud_rate: 9600
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+
+
+switch:
+  - platform: template
+    id: switch01
+    name: ${switch_name}
+
+    turn_on_action:
+      then:
+        - uart.write: [0xA0, 0x01, 0x01, 0xA2]
+        - switch.template.publish:
+            id:  switch01
+            state: ON
+
+    turn_off_action:
+      - uart.write: [0xA0, 0x01, 0x00, 0xA1]
+      - switch.template.publish:
+            id:  switch01
+            state: OFF
+
+
+script:
+  - id: turn_on_script
+    then:
+      - uart.write: [0xA0, 0x01, 0x01, 0xA2]
+
+  - id: turn_off_script
+    then:
+      - uart.write: [0xA0, 0x01, 0x00, 0xA1]
+
+interval:
+  - interval: 10s
+    then:
+
+    - if:
+        condition:
+          switch.is_on: switch01
+        then:
+        - script.execute: turn_on_script
+
+
+# dashboard_import:
+#   package_import_url: github://esphome/esphome-project-template/project-template-esp32.yaml@v6
+#   import_full_config: true # or true
